@@ -14,6 +14,20 @@ type GetSubjectsOptions = {
   limit?: number;
 };
 
+const subjectListFields = {
+  id: subjects.id,
+  name: subjects.name,
+  code: subjects.code,
+  description: subjects.description,
+  departmentId: subjects.departmentId,
+  departmentName: departments.name,
+  departmentCode: departments.code,
+  status: subjects.status,
+  createdById: subjects.createdById,
+  createdAt: subjects.createdAt,
+  updatedAt: subjects.updatedAt,
+};
+
 const ensureDepartmentExists = async (departmentId: string) => {
   const [department] = await db
     .select()
@@ -53,12 +67,13 @@ export const getSubjects = async ({
       : searchCondition ?? departmentCondition;
 
   const data = await db
-    .select()
-    .from(subjects)
-    .where(whereCondition)
-    .orderBy(desc(subjects.createdAt))
-    .limit(limit)
-    .offset(offset);
+  .select(subjectListFields)
+  .from(subjects)
+  .leftJoin(departments, eq(subjects.departmentId, departments.id))
+  .where(whereCondition)
+  .orderBy(desc(subjects.createdAt))
+  .limit(limit)
+  .offset(offset);
 
   const [totalResult] = await db
     .select({ value: count() })
@@ -80,8 +95,9 @@ export const getSubjects = async ({
 
 export const getSubjectById = async (id: string) => {
   const [subject] = await db
-    .select()
+    .select(subjectListFields)
     .from(subjects)
+    .leftJoin(departments, eq(subjects.departmentId, departments.id))
     .where(eq(subjects.id, id))
     .limit(1);
 
@@ -120,7 +136,7 @@ export const createSubject = async (
     })
     .returning();
 
-  return newSubject;
+  return getSubjectById(newSubject.id);
 };
 
 export const updateSubject = async (id: string, input: UpdateSubjectInput) => {
@@ -151,5 +167,5 @@ export const updateSubject = async (id: string, input: UpdateSubjectInput) => {
     .where(eq(subjects.id, id))
     .returning();
 
-  return updatedSubject;
+  return getSubjectById(updatedSubject.id);
 };
