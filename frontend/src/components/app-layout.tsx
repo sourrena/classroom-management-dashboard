@@ -3,14 +3,20 @@ import {
   BookOutlined,
   DashboardOutlined,
   LogoutOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+  MoonOutlined,
   ReadOutlined,
   SolutionOutlined,
+  SunOutlined,
   TeamOutlined,
   UserOutlined,
 } from "@ant-design/icons";
 import { useLogout } from "@refinedev/core";
-import { Avatar, Button, Layout, Menu, Space, Tag, Typography } from "antd";
+import { Avatar, Button, Grid, Layout, Menu, Space, Tag, Typography } from "antd";
+import { useContext, useEffect, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router";
+import { ColorModeContext } from "../contexts/color-mode";
 import { getCurrentUser } from "../lib/current-user";
 
 const { Header, Sider, Content } = Layout;
@@ -18,28 +24,40 @@ const { Text } = Typography;
 
 export const AppLayout = () => {
   const location = useLocation();
+  const screens = Grid.useBreakpoint();
   const { mutate: logout } = useLogout();
+  const { mode, setMode } = useContext(ColorModeContext);
   const user = getCurrentUser();
+
+  const [collapsed, setCollapsed] = useState(false);
+
+  const isDesktop = Boolean(screens.lg);
+
+  useEffect(() => {
+    if (!isDesktop) {
+      setCollapsed(true);
+    }
+  }, [isDesktop]);
 
   const firstPathSegment = location.pathname.split("/")[1];
   const selectedKey = firstPathSegment ? `/${firstPathSegment}` : "/";
 
+  const toggleTheme = () => {
+    setMode(mode === "dark" ? "light" : "dark");
+  };
+
   return (
-    <Layout style={{ minHeight: "100vh" }}>
-      <Sider width={250}>
-        <div
-          style={{
-            height: 64,
-            display: "flex",
-            alignItems: "center",
-            padding: "0 20px",
-            color: "white",
-            fontWeight: 700,
-            fontSize: 18,
-            borderBottom: "1px solid rgba(255,255,255,0.12)",
-          }}
-        >
-          Classroom Dashboard
+    <Layout className="app-shell">
+      <Sider
+        className="app-sider"
+        width={260}
+        collapsedWidth={isDesktop ? 80 : 0}
+        collapsed={collapsed}
+        trigger={null}
+        breakpoint="lg"
+      >
+        <div className="app-logo">
+          {collapsed ? "CMD" : "Classroom Dashboard"}
         </div>
 
         <Menu
@@ -82,56 +100,68 @@ export const AppLayout = () => {
       </Sider>
 
       <Layout>
-        <Header
-          style={{
-            background: "white",
-            padding: "0 24px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            borderBottom: "1px solid #f0f0f0",
-          }}
-        >
-          <div>
-            <Text strong>University Classroom Management</Text>
-          </div>
+        <Header className="app-header">
+          <div className="app-header-left">
+  <Button
+    type="text"
+    className="app-menu-button"
+    icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+    onClick={() => setCollapsed((value) => !value)}
+  />
 
-          <Space size="middle">
-            <Space>
-              <Avatar src={user?.avatarUrl} icon={<UserOutlined />}>
-                {user?.fullName?.[0]}
-              </Avatar>
+  <div className="app-header-title">
+  <span className="app-header-title-full">
+    University Classroom Management
+  </span>
 
-              <div style={{ lineHeight: 1.2 }}>
-                <div>
-                  <Text strong>{user?.fullName || "User"}</Text>
-                </div>
+  <span className="app-header-title-short">
+    Dashboard
+  </span>
+</div>
+</div>
 
-                <Tag color={user?.role === "teacher" ? "blue" : "green"}>
-                  {user?.role || "guest"}
-                </Tag>
-              </div>
-            </Space>
+          <div className="app-header-right">
+  <Button
+    className="theme-toggle-button"
+    shape="circle"
+    icon={mode === "dark" ? <SunOutlined /> : <MoonOutlined />}
+    onClick={toggleTheme}
+  />
 
-            <Button
-              icon={<LogoutOutlined />}
-              onClick={() => logout()}
-            >
-              Logout
-            </Button>
-          </Space>
+  <div className="app-user-block">
+    <Avatar
+      className="app-user-avatar"
+      src={user?.avatarUrl}
+      icon={<UserOutlined />}
+    >
+      {user?.fullName?.[0]}
+    </Avatar>
+
+    <div className="app-user-text">
+      <div>
+        <Text strong>{user?.fullName || "User"}</Text>
+      </div>
+
+      <Tag color={user?.role === "teacher" ? "blue" : "green"}>
+        {user?.role || "guest"}
+      </Tag>
+    </div>
+  </div>
+
+  <Button
+  className="logout-button"
+  icon={<LogoutOutlined />}
+  onClick={() => logout()}
+>
+  <span className="logout-text">Logout</span>
+</Button>
+</div>
         </Header>
 
-        <Content
-          style={{
-            margin: 24,
-            padding: 24,
-            background: "white",
-            minHeight: 280,
-            borderRadius: 8,
-          }}
-        >
-          <Outlet />
+        <Content className="app-content-wrap">
+          <div className="app-content">
+            <Outlet />
+          </div>
         </Content>
       </Layout>
     </Layout>

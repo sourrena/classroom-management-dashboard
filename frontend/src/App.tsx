@@ -5,8 +5,11 @@ import {
 import { DashboardPage } from "./pages/dashboard";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
 
-import { AuthPage, useNotificationProvider } from "@refinedev/antd";
+import { useNotificationProvider } from "@refinedev/antd";
+import { LoginPage } from "./pages/auth/login";
 import "@refinedev/antd/dist/reset.css";
+import "./styles/theme.css";
+import "./styles/auth.css";
 
 import routerProvider, {
   DocumentTitleHandler,
@@ -88,8 +91,8 @@ function App() {
                 }}
               >
                 <Routes>
-  <Route path="/login" element={<AuthPage type="login" />} />
-  <Route path="/register" element={<RegisterPage />} />
+  <Route path="/login" element={<LoginPage />} />
+<Route path="/register" element={<RegisterPage />} />
 
   <Route
     element={

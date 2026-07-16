@@ -1,19 +1,16 @@
 import { useState } from "react";
-import { Alert, Button, Card, Form, Input, Select, Typography } from "antd";
+import { Alert, Button, Card, Form, Input, Typography } from "antd";
 import { Link, useNavigate } from "react-router";
 import { api } from "../../lib/api";
 
 const { Title, Paragraph, Text } = Typography;
 
-type RegisterFormValues = {
-  fullName: string;
+type LoginFormValues = {
   email: string;
   password: string;
-  role: "teacher" | "student";
-  avatarUrl?: string;
 };
 
-type RegisterResponse = {
+type LoginResponse = {
   success: boolean;
   data: {
     user: {
@@ -27,17 +24,17 @@ type RegisterResponse = {
   };
 };
 
-export const RegisterPage = () => {
+export const LoginPage = () => {
   const navigate = useNavigate();
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleRegister = async (values: RegisterFormValues) => {
+  const handleLogin = async (values: LoginFormValues) => {
     try {
       setIsLoading(true);
       setErrorMessage("");
 
-      const response = await api.post<RegisterResponse>("/auth/register", values);
+      const response = await api.post<LoginResponse>("/auth/login", values);
 
       const { token, user } = response.data.data;
 
@@ -47,8 +44,7 @@ export const RegisterPage = () => {
       navigate("/");
     } catch (error: any) {
       setErrorMessage(
-        error?.response?.data?.message ||
-          "Registration failed. Please try again."
+        error?.response?.data?.message || "Invalid email or password."
       );
     } finally {
       setIsLoading(false);
@@ -62,12 +58,18 @@ export const RegisterPage = () => {
           <div className="auth-logo">CMD</div>
 
           <Title level={2} className="auth-title">
-            Create account
+            Welcome back
           </Title>
 
           <Paragraph className="auth-subtitle">
-            Join the classroom dashboard as a student or teacher.
+            Sign in to manage departments, subjects, classes, and enrollments.
           </Paragraph>
+        </div>
+
+        <div className="auth-demo-box">
+          <Text strong>Demo teacher:</Text> alice.teacher@test.com / password123
+          <br />
+          <Text strong>Demo student:</Text> sofia.student@test.com / password123
         </div>
 
         {errorMessage && (
@@ -78,19 +80,7 @@ export const RegisterPage = () => {
           />
         )}
 
-        <Form
-          layout="vertical"
-          onFinish={handleRegister}
-          initialValues={{ role: "student" }}
-        >
-          <Form.Item
-            label="Full name"
-            name="fullName"
-            rules={[{ required: true, message: "Full name is required" }]}
-          >
-            <Input placeholder="Sofia Bianchi" />
-          </Form.Item>
-
+        <Form layout="vertical" onFinish={handleLogin}>
           <Form.Item
             label="Email"
             name="email"
@@ -99,45 +89,25 @@ export const RegisterPage = () => {
               { type: "email", message: "Enter a valid email" },
             ]}
           >
-            <Input placeholder="sofia@student.com" />
+            <Input placeholder="alice.teacher@test.com" />
           </Form.Item>
 
           <Form.Item
             label="Password"
             name="password"
-            rules={[
-              { required: true, message: "Password is required" },
-              { min: 6, message: "Password must be at least 6 characters" },
-            ]}
+            rules={[{ required: true, message: "Password is required" }]}
           >
             <Input.Password placeholder="password123" />
           </Form.Item>
 
-          <Form.Item
-            label="Role"
-            name="role"
-            rules={[{ required: true, message: "Role is required" }]}
-          >
-            <Select
-              options={[
-                { label: "Student", value: "student" },
-                { label: "Teacher", value: "teacher" },
-              ]}
-            />
-          </Form.Item>
-
-          <Form.Item label="Avatar URL" name="avatarUrl">
-            <Input placeholder="https://example.com/avatar.png" />
-          </Form.Item>
-
           <Button type="primary" htmlType="submit" block loading={isLoading}>
-            Register
+            Login
           </Button>
         </Form>
 
         <div className="auth-footer">
-          <Text>Already have an account? </Text>
-          <Link to="/login">Login</Link>
+          <Text>Don&apos;t have an account? </Text>
+          <Link to="/register">Create one</Link>
         </div>
       </Card>
     </div>

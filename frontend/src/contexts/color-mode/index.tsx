@@ -1,64 +1,69 @@
-import { RefineThemes } from "@refinedev/antd";
 import { ConfigProvider, theme } from "antd";
-import {
-  type PropsWithChildren,
-  createContext,
-  useEffect,
-  useState,
-} from "react";
+import type { PropsWithChildren } from "react";
+import { createContext, useEffect, useMemo, useState } from "react";
+
+type ColorMode = "light" | "dark";
 
 type ColorModeContextType = {
-  mode: string;
-  setMode: (mode: string) => void;
+  mode: ColorMode;
+  setMode: (mode: ColorMode) => void;
 };
 
-export const ColorModeContext = createContext<ColorModeContextType>(
-  {} as ColorModeContextType
-);
+export const ColorModeContext = createContext({} as ColorModeContextType);
 
-export const ColorModeContextProvider: React.FC<PropsWithChildren> = ({
-  children,
-}) => {
-  const colorModeFromLocalStorage = localStorage.getItem("colorMode");
-  const isSystemPreferenceDark = window?.matchMedia(
-    "(prefers-color-scheme: dark)"
-  ).matches;
+export const ColorModeContextProvider = ({ children }: PropsWithChildren) => {
+  const getInitialMode = (): ColorMode => {
+    const storedMode = localStorage.getItem("colorMode");
 
-  const systemPreference = isSystemPreferenceDark ? "dark" : "light";
-  const [mode, setMode] = useState(
-    colorModeFromLocalStorage || systemPreference
-  );
-
-  useEffect(() => {
-    window.localStorage.setItem("colorMode", mode);
-  }, [mode]);
-
-  const setColorMode = () => {
-    if (mode === "light") {
-      setMode("dark");
-    } else {
-      setMode("light");
+    if (storedMode === "light" || storedMode === "dark") {
+      return storedMode;
     }
+
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+    return prefersDark ? "dark" : "light";
   };
 
-  const { darkAlgorithm, defaultAlgorithm } = theme;
+  const [mode, setMode] = useState<ColorMode>(getInitialMode);
+
+  useEffect(() => {
+    localStorage.setItem("colorMode", mode);
+    document.documentElement.setAttribute("data-theme", mode);
+  }, [mode]);
+
+  const antdTheme = useMemo(
+    () => ({
+      algorithm:
+        mode === "dark" ? theme.darkAlgorithm : theme.defaultAlgorithm,
+      token: {
+        colorPrimary: "#10b981",
+        borderRadius: 10,
+        fontFamily:
+          "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        colorBgLayout: mode === "dark" ? "#0f1115" : "#f6f8fb",
+        colorBgContainer: mode === "dark" ? "#171717" : "#ffffff",
+        colorBorder: mode === "dark" ? "#2a2a2a" : "#e5e7eb",
+      },
+      components: {
+        Layout: {
+          bodyBg: mode === "dark" ? "#0f1115" : "#f6f8fb",
+          headerBg: mode === "dark" ? "#171717" : "#ffffff",
+          siderBg: mode === "dark" ? "#07111f" : "#07111f",
+        },
+        Card: {
+          colorBgContainer: mode === "dark" ? "#171717" : "#ffffff",
+        },
+        Table: {
+          headerBg: mode === "dark" ? "#1f1f1f" : "#f9fafb",
+        },
+      },
+    }),
+    [mode]
+  );
 
   return (
-    <ColorModeContext.Provider
-      value={{
-        setMode: setColorMode,
-        mode,
-      }}
-    >
-      <ConfigProvider
-        // you can change the theme colors here. example: ...RefineThemes.Magenta,
-        theme={{
-          ...RefineThemes.Blue,
-          algorithm: mode === "light" ? defaultAlgorithm : darkAlgorithm,
-        }}
-      >
-        {children}
-      </ConfigProvider>
+    <ColorModeContext.Provider value={{ mode, setMode }}>
+      <ConfigProvider theme={antdTheme}>{children}</ConfigProvider>
     </ColorModeContext.Provider>
   );
 };

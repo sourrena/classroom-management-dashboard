@@ -1,3 +1,11 @@
+import {
+  AppstoreOutlined,
+  BookOutlined,
+  ReadOutlined,
+  SolutionOutlined,
+  TeamOutlined,
+  UsergroupAddOutlined,
+} from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import {
   Alert,
@@ -30,17 +38,15 @@ type StatCardProps = {
   title: string;
   value: number;
   path: string;
+  icon: React.ReactNode;
 };
 
-const StatCard = ({ title, value, path }: StatCardProps) => {
+const StatCard = ({ title, value, path, icon }: StatCardProps) => {
   const navigate = useNavigate();
 
   return (
-    <Card
-      hoverable
-      onClick={() => navigate(path)}
-      style={{ height: "100%" }}
-    >
+    <Card hoverable className="stat-card" onClick={() => navigate(path)}>
+      <div className="stat-card-icon">{icon}</div>
       <Statistic title={title} value={value} />
     </Card>
   );
@@ -51,6 +57,7 @@ export const DashboardPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
+  const navigate = useNavigate();
   const user = getCurrentUser();
   const canManageAcademicData = isTeacher();
   const canEnroll = isStudent();
@@ -71,137 +78,131 @@ export const DashboardPage = () => {
   }, []);
 
   if (isLoading) {
-    return (
-      <div style={{ padding: 24 }}>
-        <Spin />
-      </div>
-    );
+    return <Spin />;
   }
 
   if (errorMessage) {
-    return (
-      <div style={{ padding: 24 }}>
-        <Alert type="error" message={errorMessage} />
-      </div>
-    );
+    return <Alert type="error" message={errorMessage} />;
   }
 
   return (
-    <div>
-      <Space direction="vertical" size={24} style={{ width: "100%" }}>
+    <div className="dashboard-page">
+      <div className="dashboard-hero">
         <div>
-          <Title level={2} style={{ marginBottom: 4 }}>
+          <Title level={2} className="dashboard-title">
             Dashboard
           </Title>
 
-          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-            Welcome back,{" "}
-            <Text strong>{user?.fullName || "User"}</Text>. You are logged in as{" "}
-            <Text strong>{user?.role}</Text>.
+          <Paragraph className="dashboard-subtitle">
+            Welcome back, <Text strong>{user?.fullName || "User"}</Text>. You
+            are logged in as <Text strong>{user?.role}</Text>.
           </Paragraph>
         </div>
 
-        <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} lg={8}>
-            <StatCard
-              title="Students"
-              value={stats?.students ?? 0}
-              path="/enrollments"
-            />
-          </Col>
+        <Space wrap>
+          <Button onClick={() => navigate("/classes")}>Browse Classes</Button>
 
-          <Col xs={24} sm={12} lg={8}>
-            <StatCard
-              title="Teachers"
-              value={stats?.teachers ?? 0}
-              path="/faculty"
-            />
-          </Col>
-
-          <Col xs={24} sm={12} lg={8}>
-            <StatCard
-              title="Departments"
-              value={stats?.departments ?? 0}
-              path="/departments"
-            />
-          </Col>
-
-          <Col xs={24} sm={12} lg={8}>
-            <StatCard
-              title="Subjects"
-              value={stats?.subjects ?? 0}
-              path="/subjects"
-            />
-          </Col>
-
-          <Col xs={24} sm={12} lg={8}>
-            <StatCard
-              title="Classes"
-              value={stats?.classes ?? 0}
-              path="/classes"
-            />
-          </Col>
-
-          <Col xs={24} sm={12} lg={8}>
-            <StatCard
-              title="Active Classes"
-              value={stats?.activeClasses ?? 0}
-              path="/classes"
-            />
-          </Col>
-
-          <Col xs={24} sm={12} lg={8}>
-            <StatCard
-              title="Enrollments"
-              value={stats?.enrollments ?? 0}
-              path="/enrollments"
-            />
-          </Col>
-        </Row>
-
-        <Card title="Quick actions">
-          <Space wrap>
-            <Button onClick={() => window.location.assign("/classes")}>
-              Browse Classes
+          {canManageAcademicData && (
+            <Button type="primary" onClick={() => navigate("/classes/create")}>
+              New Class
             </Button>
+          )}
 
-            <Button onClick={() => window.location.assign("/subjects")}>
-              View Subjects
+          {canEnroll && (
+            <Button
+              type="primary"
+              onClick={() => navigate("/enrollments/create")}
+            >
+              Enroll in Class
             </Button>
+          )}
+        </Space>
+      </div>
 
-            <Button onClick={() => window.location.assign("/faculty")}>
-              View Faculty
-            </Button>
+      <Row gutter={[16, 16]}>
+        <Col xs={24} sm={12} xl={6}>
+          <StatCard
+            title="Students"
+            value={stats?.students ?? 0}
+            path="/enrollments"
+            icon={<UsergroupAddOutlined />}
+          />
+        </Col>
 
-            {canManageAcademicData && (
-              <>
-                <Button
-                  type="primary"
-                  onClick={() => window.location.assign("/departments/create")}
-                >
-                  New Department
-                </Button>
+        <Col xs={24} sm={12} xl={6}>
+          <StatCard
+            title="Teachers"
+            value={stats?.teachers ?? 0}
+            path="/faculty"
+            icon={<TeamOutlined />}
+          />
+        </Col>
 
-                <Button
-                  type="primary"
-                  onClick={() => window.location.assign("/classes/create")}
-                >
-                  New Class
-                </Button>
-              </>
-            )}
+        <Col xs={24} sm={12} xl={6}>
+          <StatCard
+            title="Departments"
+            value={stats?.departments ?? 0}
+            path="/departments"
+            icon={<AppstoreOutlined />}
+          />
+        </Col>
 
-            {canEnroll && (
-              <Button
-                type="primary"
-                onClick={() => window.location.assign("/enrollments/create")}
-              >
-                Enroll in Class
+        <Col xs={24} sm={12} xl={6}>
+          <StatCard
+            title="Subjects"
+            value={stats?.subjects ?? 0}
+            path="/subjects"
+            icon={<BookOutlined />}
+          />
+        </Col>
+
+        <Col xs={24} sm={12} xl={6}>
+          <StatCard
+            title="Classes"
+            value={stats?.classes ?? 0}
+            path="/classes"
+            icon={<ReadOutlined />}
+          />
+        </Col>
+
+        <Col xs={24} sm={12} xl={6}>
+          <StatCard
+            title="Active Classes"
+            value={stats?.activeClasses ?? 0}
+            path="/classes"
+            icon={<ReadOutlined />}
+          />
+        </Col>
+
+        <Col xs={24} sm={12} xl={6}>
+          <StatCard
+            title="Enrollments"
+            value={stats?.enrollments ?? 0}
+            path="/enrollments"
+            icon={<SolutionOutlined />}
+          />
+        </Col>
+      </Row>
+
+      <Card title="Quick actions" className="quick-actions-card" style={{ marginTop: 24 }}>
+        <Space wrap>
+          <Button onClick={() => navigate("/subjects")}>View Subjects</Button>
+          <Button onClick={() => navigate("/faculty")}>View Faculty</Button>
+          <Button onClick={() => navigate("/classes")}>View Classes</Button>
+
+          {canManageAcademicData && (
+            <>
+              <Button onClick={() => navigate("/departments/create")}>
+                New Department
               </Button>
-            )}
-          </Space>
-        </Card>
-      </Space>
+
+              <Button onClick={() => navigate("/subjects/create")}>
+                New Subject
+              </Button>
+            </>
+          )}
+        </Space>
+      </Card>
     </div>
   );
 };
